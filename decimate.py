@@ -2,7 +2,7 @@ import numpy as np
 import pycolmap
 
 
-reconstruction = pycolmap.Reconstruction("data/79/00010c81/sparse/0")
+reconstruction = pycolmap.Reconstruction("data/79_recolmap/00010c81/sparse/0")
 
 images_by_name = sorted(reconstruction.images.items(), 
                         key=lambda x: x[1].name)

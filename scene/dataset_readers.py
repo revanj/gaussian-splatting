@@ -142,7 +142,7 @@ def storePly(path, xyz, rgb):
     ply_data = PlyData([vertex_element])
     ply_data.write(path)
 
-def readColmapSceneInfo(path, images, depths, eval, train_test_exp, llffhold=8):
+def readColmapSceneInfo(path, images, depths, eval, train_test_exp, llffhold=2):
     try:
         cameras_extrinsic_file = os.path.join(path, "sparse/0", "images.bin")
         cameras_intrinsic_file = os.path.join(path, "sparse/0", "cameras.bin")
@@ -183,7 +183,9 @@ def readColmapSceneInfo(path, images, depths, eval, train_test_exp, llffhold=8):
             print("------------LLFF HOLD-------------")
             cam_names = [cam_extrinsics[cam_id].name for cam_id in cam_extrinsics]
             cam_names = sorted(cam_names)
-            test_cam_names_list = [name for idx, name in enumerate(cam_names) if idx % llffhold == 0]
+            # test_cam_names_list = [name for idx, name in enumerate(cam_names) if idx % llffhold == llffhold-1]
+            test_cam_names_list = ["002.jpg", "004.jpg","006.jpg","008.jpg","010.jpg","012.jpg","014.jpg","016.jpg","018.jpg","020.jpg","022.jpg","024.jpg","026.jpg","028.jpg","030.jpg",]
+            print("test_cam_names_list is", test_cam_names_list)
         else:
             with open(os.path.join(path, "sparse/0", "test.txt"), 'r') as file:
                 test_cam_names_list = [line.strip() for line in file]

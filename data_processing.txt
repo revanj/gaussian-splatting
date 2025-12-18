@@ -1,0 +1,66 @@
+# I did this a few times by hand because moving data between RIFE and GS is too annoying to write into a script
+# somehow if you do not turn off gpu it crashes??
+
+# first use this to generate colmap again to get a funtional database.db
+cp -r data/<number>/ data/<number>_recolmap
+cd data/<number>_recolmap/<hash>
+colmap feature_extractor \
+  --database_path database.db \
+  --image_path images/ \
+  --ImageReader.single_camera 1 \
+  --SiftExtraction.use_gpu 0
+
+colmap exhaustive_matcher \
+  --database_path database.db \
+  --SiftMatching.use_gpu 0
+
+colmap mapper \
+  --database_path database.db \
+  --image_path images/ \
+  --output_path sparse
+
+# use next step want this folder called input/
+mv images input/
+
+# use gaussian splatting's convert.py
+cd ../../../
+python convert.py -s data/number_recolmap/hash --skip_matching
+# use ffmpeg convert images to pngs
+# delete all the even frames 
+# interpolate using RIFE, then move it back into data/number/hash/images
+# move database.db into data/number/hash/distorted/
+
+# and then run feature extractor on the new images as well
+colmap feature_extractor \ 
+  --database_path distorted/database.db \
+  --image_path input/ \   
+  --ImageReader.single_camera 1 \
+  --SiftExtraction.use_gpu 0
+
+colmap exhaustive_matcher \
+  --database_path distorted/database.db \
+  --SiftMatching.use_gpu 0
+
+colmap image_registrator \
+  --database_path database.db \
+  --input_path sparse/0 \
+  --output_path sparse/0_new
+
+# and then run convert.py again
+python convert.py -s data/<number>_recolmap/<hash> --skip_matching
+
+# this gives you a dataset with ALL original images plus the interpolated images
+# like this
+# 001.jpg         006.jpg         012_interp.jpg  017.jpg         022.jpg         028_interp.jpg
+# 002_interp.jpg  007.jpg         012.jpg         018_interp.jpg  023.jpg         028.jpg
+# 002.jpg         008_interp.jpg  013.jpg         018.jpg         024_interp.jpg  029.jpg
+# 003.jpg         008.jpg         014_interp.jpg  019.jpg         024.jpg         030.jpg
+# 004_interp.jpg  009.jpg         014.jpg         020_interp.jpg  025.jpg
+# 004.jpg         010_interp.jpg  015.jpg         020.jpg         026_interp.jpg
+# 005.jpg         010.jpg         016_interp.jpg  021.jpg         026.jpg
+# 006_interp.jpg  011.jpg         016.jpg         022_interp.jpg  027.jpg
+
+# the extra non-interpolated ground truth images are filtered out in
+# scene/dataset_readers.py
+# test_cam_names_list = ["002.jpg", "004.jpg","006.jpg","008.jpg","010.jpg","012.jpg","014.jpg","016.jpg","018.jpg","020.jpg","022.jpg","024.jpg","026.jpg","028.jpg","030.jpg",]
+# remove this line and uncomment the line above it for a saner behavior
